@@ -2,6 +2,7 @@
 - hosts: all
   vars:
     composer_path: "/usr/local/bin/composer"
+    host_name: "cachet.mycompany.com"
   become: yes
   become_user: root
   become_method: sudo
@@ -14,8 +15,14 @@
 
     - name: Install mysql extra
       yum:
-        name: ['php', 'python-pip', 'mysql-devel', 'gcc', 'php-mbstring', 'php-gd', 'php-xml', 'php-apcu']
+        name: ['php', 'python-pip', 'mysql-devel', 'gcc', 'php-mbstring', 'php-gd', 'php-xml', 'php-apcu', 'php-sqlite3', 'php-pdo']
         state: latest
+    
+    - name: Install the pexpect module
+      pip:
+        name: ['pexpect']
+        state: latest
+
 
     - name: Check if Composer is installed.
       stat: "path={{ composer_path }}"
@@ -59,3 +66,31 @@
         state: absent
       tags:
         - composer
+
+    - name: Install cachet
+      git: 
+        repo: "https://github.com/cachethq/Cachet.git"
+        dest: "/var/vhost/{{ host_name }}/public"
+
+    - name: Copy env files
+      copy:
+        src: "./files/cachet/env"
+        dest: "/var/vhost/{{ host_name }}/public/.env"
+        mode: 0644
+
+    - name: Install Cachet  
+      shell: "{{ composer_path }} install --no-dev -o"
+      args:
+        chdir: "/var/vhost/{{ host_name }}/public"
+    
+        #- name: Generate Cachet App Key 
+        #expect:
+        #echo: yes
+        #command: "php artisan key:generate"
+        #chdir: "/var/vhost/{{ host_name }}/public"
+        #responses:
+        #  "Do you really wish to run this command? (yes/no)": "yes"
+    #- name: Install migrations
+    #  shell: "php artisan app:install"
+    #  args:
+    #    chdir: "/var/vhost/{{ host_name }}/public"
