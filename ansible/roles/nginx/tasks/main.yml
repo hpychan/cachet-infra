@@ -1,7 +1,7 @@
 ---
 - name: install tools
   yum: 
-    name: ['python-httplib2'] 
+    name: ['python-httplib2', 'python-pip'] 
     state: present 
     update_cache: yes
 
@@ -11,8 +11,42 @@
     state: present 
     update_cache: yes
 
+- name: Install the Python openSSL module
+  pip:
+    name: ['pyOpenSSL']
+    state: latest
+
+- name: Creates directory
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /etc/ssl
+    - /etc/ssl/csr
+    - /etc/ssl/crt
+    - /etc/ssl/private
+
+- name: Creates private key
+  openssl_privatekey:
+    path: /etc/ssl/private/{{ item.value.name }}.key
+    type: RSA
+    backup: yes
+
+- name: Generate an OpenSSL Certificate Signing Request
+  openssl_csr:
+    path: /etc/ssl/csr/{{ item.value.name }}.csr
+    privatekey_path: /etc/ssl/private/{{ item.value.name }}.key
+    common_name: "{{ item.value.name }}"
+
+- name: Generate a Self Signed OpenSSL certificate
+  openssl_certificate:
+    path: /etc/ssl/crt/{{ item.value.name }}.crt
+    privatekey_path: /etc/ssl/private/{{ item.value.name }}.key
+    csr_path: /etc/ssl/csr/{{ item.value.name }}.csr
+    provider: selfsigned
+
 - name: configure nginx sites
-  template: src=nginx.conf.j2 dest=/etc/nginx/conf.d/{{ item.key }}.conf mode=0644
+  template: src=nginx.conf.j2 dest=/etc/nginx/conf.d/{{ item.value.name }}.conf mode=0644
   with_dict: "{{ sites }}"
   notify: restart nginx
 

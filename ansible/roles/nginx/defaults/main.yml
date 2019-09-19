@@ -1,5 +1,6 @@
 ---
 sites:
   myapp:
+    name: "myapp"
     frontend: 443
     backend: 80

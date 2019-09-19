@@ -5,23 +5,23 @@ upstream php {
 }
 
 server {
-    server_name {{ item.key }}; # Or whatever you want to use
+    server_name {{ item.value.name }}; # Or whatever you want to use
     listen 80 default;
-    rewrite ^(.*) https://{{ item.key }}$1 permanent;
+    rewrite ^(.*) https://{{ item.value.name }}$1 permanent;
 }
 
 # HTTPS server
 
 server {
     listen {{ item.value.frontend }};
-    server_name {{ item.key }};
+    server_name {{ item.value.name }};
 
-    root /var/vhost/{{ item.key }}/public;
+    root /var/vhost/{{ item.value.name }}/public;
     index index.php;
 
     ssl on;
-    ssl_certificate /etc/ssl/crt/{{ item.key }}.crt; # Or wherever your crt is
-    ssl_certificate_key /etc/ssl/private/{{ item.key }}.key; # Or wherever your key is
+    ssl_certificate /etc/ssl/crt/{{ item.value.name }}.crt; # Or wherever your crt is
+    ssl_certificate_key /etc/ssl/private/{{ item.value.name }}.key; # Or wherever your key is
     ssl_session_timeout 5m;
 
     # Best practice as at March 2014
@@ -43,7 +43,7 @@ server {
                 fastcgi_keep_conn on;
                 add_header Strict-Transport-Security max-age=15768000;
     }
-    ''
-    access_log  /var/log/nginx/{{ item.key }}_access.log  main;
-    error_log   /var/log/nginx/{{ item.key }}_error.log  error;
+    
+    access_log  /var/log/nginx/{{ item.value.name }}_access.log  main;
+    error_log   /var/log/nginx/{{ item.value.name }}_error.log  error;
 }
