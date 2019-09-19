@@ -1,9 +1,15 @@
 ---
 - name: install tools
-  yum: name=['python-httplib2'] state=present update_cache=yes
+  yum: 
+    name: ['python-httplib2'] 
+    state: present 
+    update_cache: yes
 
 - name: install nginx
-  yum: name=nginx state=present update_cache=yes
+  yum: 
+    name: nginx 
+    state: present 
+    update_cache: yes
 
 - name: configure nginx sites
   template: src=nginx.conf.j2 dest=/etc/nginx/sites-available/{{ item.key }} mode=0644
