@@ -16,6 +16,13 @@
     name: ['pyOpenSSL']
     state: latest
 
+- name: Copy nginx config files
+  copy:
+    src: "./files/nginx.conf"
+    dest: "/etc/nginx/nginx.conf"
+    mode: 0644
+  notify: restart nginx
+        
 - name: Creates directory
   file:
     path: "{{ item }}"
@@ -31,12 +38,14 @@
     path: /etc/ssl/private/{{ item.value.name }}.key
     type: RSA
     backup: yes
+  with_dict: "{{ sites }}"
 
 - name: Generate an OpenSSL Certificate Signing Request
   openssl_csr:
     path: /etc/ssl/csr/{{ item.value.name }}.csr
     privatekey_path: /etc/ssl/private/{{ item.value.name }}.key
     common_name: "{{ item.value.name }}"
+  with_dict: "{{ sites }}"
 
 - name: Generate a Self Signed OpenSSL certificate
   openssl_certificate:
@@ -44,6 +53,7 @@
     privatekey_path: /etc/ssl/private/{{ item.value.name }}.key
     csr_path: /etc/ssl/csr/{{ item.value.name }}.csr
     provider: selfsigned
+  with_dict: "{{ sites }}"
 
 - name: configure nginx sites
   template: src=nginx.conf.j2 dest=/etc/nginx/conf.d/{{ item.value.name }}.conf mode=0644
